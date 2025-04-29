@@ -80,8 +80,7 @@ export default function SignUpPage() {
 
   
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -133,7 +132,7 @@ export default function SignUpPage() {
 
   
   useEffect(() => {
-    const required = ['firstName', 'lastName', 'email', 'password', 'role', 'agreeTerms'];
+    const required = ['username', 'email', 'password', 'role', 'agreeTerms'];
     const filled = required.filter((f) => {
       if (f === 'agreeTerms') return form[f];
       return Boolean(form[f]);
@@ -144,8 +143,7 @@ export default function SignUpPage() {
   
   const validateStage1 = () => {
     const errors = {};
-    if (!form.firstName.trim()) errors.firstName = 'First name is required';
-    if (!form.lastName.trim()) errors.lastName = 'Last name is required';
+    if (!form.username.trim()) errors.username = 'User name is required';
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -266,58 +264,31 @@ export default function SignUpPage() {
                         <User
                           size={18}
                           className={`transition-colors duration-300 ${
-                            focusedField === 'firstName' ? 'text-blue-500' : 'text-gray-400'
+                            focusedField === 'username' ? 'text-blue-500' : 'text-gray-400'
                           }`}
                         />
                       </div>
                       <input
                         className={`w-full rounded-lg border bg-gray-50 py-3 pl-10 pr-4 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 group-hover:border-blue-300 ${
-                          focusedField === 'firstName'
+                          focusedField === 'username'
                             ? 'border-blue-500 bg-blue-50'
-                            : fieldErrors.firstName
+                            : fieldErrors.username
                             ? 'border-red-300 bg-red-50'
                             : 'border-gray-200'
                         }`}
-                        name="firstName"
+                        name="username"
                         placeholder="First name"
-                        value={form.firstName}
+                        value={form.username}
                         onChange={handleChange}
-                        onFocus={() => setFocusedField('firstName')}
+                        onFocus={() => setFocusedField('username')}
                         onBlur={() => setFocusedField(null)}
                       />
-                      {fieldErrors.firstName && (
-                        <p className="mt-1 text-xs text-red-500">{fieldErrors.firstName}</p>
+                      {fieldErrors.username && (
+                        <p className="mt-1 text-xs text-red-500">{fieldErrors.username}</p>
                       )}
                       <div
                         className={`absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-500 ease-out ${
-                          focusedField === 'firstName' ? 'w-full' : 'w-0'
-                        }`}
-                      />
-                    </div>
-
-                    {/* Last name */}
-                    <div className="group relative">
-                      <input
-                        className={`w-full rounded-lg border bg-gray-50 px-4 py-3 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 group-hover:border-blue-300 ${
-                          focusedField === 'lastName'
-                            ? 'border-blue-500 bg-blue-50'
-                            : fieldErrors.lastName
-                            ? 'border-red-300 bg-red-50'
-                            : 'border-gray-200'
-                        }`}
-                        name="lastName"
-                        placeholder="Last name"
-                        value={form.lastName}
-                        onChange={handleChange}
-                        onFocus={() => setFocusedField('lastName')}
-                        onBlur={() => setFocusedField(null)}
-                      />
-                      {fieldErrors.lastName && (
-                        <p className="mt-1 text-xs text-red-500">{fieldErrors.lastName}</p>
-                      )}
-                      <div
-                        className={`absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-500 ease-out ${
-                          focusedField === 'lastName' ? 'w-full' : 'w-0'
+                          focusedField === 'username' ? 'w-full' : 'w-0'
                         }`}
                       />
                     </div>

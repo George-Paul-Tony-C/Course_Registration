@@ -1,8 +1,9 @@
 import React, { useContext, useState } from 'react';
 import { Users, BookOpen, Award, BarChart, Settings, Bell, Search, Menu, X, Trash } from 'lucide-react';
 import { AuthCtx } from '../../context/AuthContext';
+import { Link } from 'react-router-dom';
 
-export default function AdminDashboard() {
+export default function SampleAdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -98,12 +99,12 @@ export default function AdminDashboard() {
                 <Bell size={20} />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
-              <div className="flex items-center space-x-3">
+              <Link to='/admin/profile' className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-medium">
                   AD
                 </div>
                 <span className="font-medium">Admin User</span>
-              </div>
+              </Link>
             </div>
           </div>
         </div>

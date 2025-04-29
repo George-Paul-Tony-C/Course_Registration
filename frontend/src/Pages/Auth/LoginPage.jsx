@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { AuthCtx } from '../../context/AuthContext';
 import { Mail, Lock, LogIn, Check, X, EyeOff, Eye } from 'lucide-react';
 
@@ -52,8 +52,28 @@ const ParticlesAnimation = () => {
   );
 };
 
+// Water flow animation for success state
+const WaterFlowAnimation = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none z-20">
+    <div className="absolute -left-full top-0 w-full h-full bg-blue-600 animate-flow-right">
+      <ParticlesAnimation />
+      <div className="absolute inset-0 flex items-center justify-center text-white z-30">
+        <div className="flex flex-col items-center gap-4 animate-bounce-in">
+          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center animate-scale-in">
+            <Check size={32} className="text-blue-600" />
+          </div>
+          <p className="text-xl font-medium animate-fade-in-up">Login successful!</p>
+          <p className="animate-fade-in-up delay-150">Welcome back!</p>
+          <p className="animate-fade-in-up delay-300">Redirecting you...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function LoginPage() {
-  const { login } = useContext(AuthCtx);
+
+  const { login , loggedIn } = useContext(AuthCtx);
   const nav = useNavigate();
 
   const [form, setForm] = useState({ email: '', password: '' });
@@ -83,10 +103,10 @@ export default function LoginPage() {
     try {
       const role = await login(form);
       setSuccess(true);
-      // Delay navigation for animation
+      // Delay navigation to allow animation to complete
       setTimeout(() => {
         nav(`/${role.toLowerCase()}`, { replace: true });
-      }, 1200);
+      }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || err.message);
     } finally { 
@@ -95,7 +115,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 transition-all duration-700">
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 transition-all duration-700 relative overflow-hidden">
       {/* Animated sidebar */}
       <div 
         className={`hidden lg:flex lg:w-1/2 bg-blue-600 text-white flex-col justify-center items-center p-12 order-1
@@ -120,28 +140,17 @@ export default function LoginPage() {
       </div>
       
       {/* Form container */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 order-2">
-        <div className={`w-full max-w-md transform transition-all duration-700 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 order-2 relative">
+        {/* Success water animation overlay */}
+        {success && <WaterFlowAnimation />}
+        
+        <div className={`w-full max-w-md transform transition-all duration-700 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'} relative z-10`}>
           <form 
             onSubmit={submit} 
             className="bg-white rounded-2xl shadow-xl p-8 relative overflow-hidden transition-all duration-500"
           >
             {/* Background animated gradient */}
             <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-80 pointer-events-none"></div>
-            
-            {/* Success animation overlay */}
-            {success && (
-              <div className="absolute inset-0 bg-blue-600 flex items-center justify-center text-white z-10">
-                <div className="flex flex-col items-center gap-4 animate-bounce-in">
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center animate-scale-in">
-                    <Check size={32} className="text-blue-600" />
-                  </div>
-                  <p className="text-xl font-medium animate-fade-in-up">Login successful!</p>
-                  <p className="animate-fade-in-up delay-150">Welcome back!</p>
-                  <p className="animate-fade-in-up delay-300">Redirecting you...</p>
-                </div>
-              </div>
-            )}
             
             <div className="relative z-1">
               <div className="text-center mb-8">
@@ -231,12 +240,12 @@ export default function LoginPage() {
                 )}
                 
                 <button 
-                  disabled={busy}
+                  disabled={busy || success}
                   className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-md hover:shadow-lg 
                             transition-all duration-300 transform hover:-translate-y-0.5 
                             flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  {busy ? (
+                  {busy && !success ? (
                     <div className="flex items-center gap-2">
                       <span className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
                       <span>Signing in...</span>
@@ -283,10 +292,10 @@ export default function LoginPage() {
                 <p className="text-gray-600">
                   Don't have an account? {' '}
                   <Link 
-                    to="/signup" 
-                    className="text-blue-600 font-medium hover:underline relative inline-block group"
+                    to="/request-access" 
+                    className="text-blue-600 font-medium relative inline-block group"
                   >
-                    Sign up
+                    Contact Your Admin
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
                   </Link>
                 </p>

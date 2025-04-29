@@ -11,4 +11,6 @@ api.use('/admin',   adminRoutes);
 api.use('/faculty', facRoutes);
 api.use('/student', stuRoutes);
 
+
+
 module.exports = api;

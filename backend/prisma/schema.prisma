@@ -1,38 +1,206 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
+// ----------  Prisma configuration  ----------
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ----------  ENUMS  ----------
+enum Role         { 
+  ADMIN 
+  FACULTY 
+  STUDENT 
+}
+enum CourseStatus { 
+  PENDING
+  ACTIVE 
+  ARCHIVED 
+}
+enum ContentType  { 
+  IMAGE 
+  PDF 
+  VIDEO 
+  QUIZ 
+}
+
+// ----------  MODELS  ----------
+
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  firstName String
-  lastName  String
-  password  String
-  role      Role     @default(STUDENT)   
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  username      String   @unique @db.VarChar(100)
+  email         String   @unique @db.VarChar(320)
+  password_hash String   @db.Char(60)
+  role          Role     @default(STUDENT)
+  is_deleted    Boolean  @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime? @updatedAt
 
-  RefreshToken RefreshToken[]
+  createdCourses Course[]        @relation("CourseCreator")
+  facultyCourses CourseFaculty[]
+  studentCourses   CourseStudent[] @relation("StudentCourses")
+  adviseeCourses   CourseStudent[] @relation("FacultyAdvisees")
+  uploadedFiles  File[]
+  notifications  Notification[]
+  auditLogs      AuditLog[]      @relation("AuditActor")
+  quizAttempts   QuizAttempt[]
+  refreshTokens  RefreshToken[]
+
+  @@index([role], map: "idx_users_role")
 }
 
-enum Role {
-  ADMIN
-  FACULTY
-  STUDENT
-}
-
+/// ---------------------------------------------------------------------
 model RefreshToken {
-  id        Int      @id @default(autoincrement())
-  tokenHash String   @unique
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  tokenHash String   @unique @db.Char(64)
+  userId    Int      @db.UnsignedInt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_token")
+}
+
+model Course {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  code        String   @unique @db.VarChar(20)
+  title       String   @db.VarChar(150)
+  description String?  @db.Text
+  status      CourseStatus @default(PENDING)
+  created_by  Int      @db.UnsignedInt
+  is_deleted  Boolean  @default(false)
+  created_at  DateTime @default(now())
+  updated_at  DateTime? @updatedAt
+
+  creator   User            @relation("CourseCreator", fields: [created_by], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  faculties CourseFaculty[]
+  students  CourseStudent[]
+  contents  Content[]
+  quizzes   Quiz[]
+
+  @@index([status], map: "idx_courses_status")
+}
+
+model CourseFaculty {
+  course_id  Int @db.UnsignedInt
+  faculty_id Int @db.UnsignedInt
+
+  course  Course @relation(fields: [course_id],  references: [id], onDelete: Cascade, onUpdate: Cascade)
+  faculty User   @relation(fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([course_id, faculty_id])
+  @@index([faculty_id], map: "idx_cf_faculty")
+}
+
+model CourseStudent {
+  course_id   Int      @db.UnsignedInt
+  student_id  Int      @db.UnsignedInt
+  faculty_id  Int?     @db.UnsignedInt   // optional
+  enrolled_at DateTime @default(now())
+
+  course   Course @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  student  User   @relation("StudentCourses", fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  faculty  User?  @relation("FacultyAdvisees", fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([course_id, student_id])
+  @@index([student_id], map: "idx_cs_student")
+  @@index([faculty_id], map: "idx_cs_faculty")
 }
 
 
+model File {
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  uploader_id   Int?     @db.UnsignedInt
+  original_name String   @db.VarChar(255)
+  stored_path   String   @db.VarChar(500)
+  mime_type     String   @db.VarChar(100)
+  size_bytes    Int      @db.UnsignedInt
+  uploaded_at   DateTime @default(now())
+
+  uploader User?   @relation(fields: [uploader_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  contents Content[]
+}
+
+model Content {
+  id            Int       @id @default(autoincrement()) @db.UnsignedInt
+  course_id     Int       @db.UnsignedInt
+  title         String    @db.VarChar(150)
+  type          ContentType
+  file_id       Int?      @db.UnsignedInt
+  youtube_url   String?   @db.VarChar(500)
+  display_order Int       @default(0)
+  created_at    DateTime  @default(now())
+
+  course Course @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  file   File?  @relation(fields: [file_id],   references: [id], onDelete: SetNull,  onUpdate: Cascade)
+
+  @@index([course_id, display_order], map: "idx_contents_course")
+}
+
+model Quiz {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  course_id   Int      @db.UnsignedInt
+  title       String   @db.VarChar(150)
+  total_marks Int      @default(0)
+  created_at  DateTime @default(now())
+
+  course    Course         @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@index([course_id], map: "idx_quizzes_course")
+}
+
+model QuizQuestion {
+  id             Int      @id @default(autoincrement()) @db.UnsignedInt
+  quiz_id        Int      @db.UnsignedInt
+  question_text  String   @db.Text
+  options_json   Json
+  correct_option Int
+  created_at     DateTime @default(now())
+
+  quiz Quiz @relation(fields: [quiz_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([quiz_id], map: "idx_qq_quiz")
+}
+
+model QuizAttempt {
+  id           Int      @id @default(autoincrement()) @db.UnsignedInt
+  quiz_id      Int      @db.UnsignedInt
+  student_id   Int      @db.UnsignedInt
+  score        Int
+  attempted_at DateTime @default(now())
+
+  quiz    Quiz @relation(fields: [quiz_id],    references: [id], onDelete: Cascade, onUpdate: Cascade)
+  student User @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([quiz_id, student_id], map: "idx_qa_quiz_student")
+}
+
+model Notification {
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  recipient_id  Int      @db.UnsignedInt
+  message       String   @db.VarChar(255)
+  is_read       Boolean  @default(false)
+  created_at    DateTime @default(now())
+
+  recipient User @relation(fields: [recipient_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([recipient_id, is_read], map: "idx_notif_recipient_read")
+}
+
+model AuditLog {
+  id           Int      @id @default(autoincrement()) @db.UnsignedInt
+  actor_id     Int?     @db.UnsignedInt
+  action       String   @db.VarChar(100)
+  details_json Json?
+  logged_at    DateTime @default(now())
+
+  actor User? @relation("AuditActor", fields: [actor_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([actor_id], map: "idx_audit_actor")
+}

@@ -4,7 +4,10 @@ const prisma = require('../config/prismaClient');
 module.exports = async (actorId, action, details = {}) => {
   try {
     await prisma.auditLog.create({
-      data: { actorId, action, detailsJson: details }
+      data: { 
+        actor_id : actorId || null, 
+        action, 
+        details_json: details }
     });
   } catch (err) {
     console.error('[AUDIT ERROR]', err.message);

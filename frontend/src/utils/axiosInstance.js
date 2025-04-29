@@ -1,91 +1,110 @@
 // src/utils/axiosInstance.js
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import { API_PATHS } from './api_paths';
 
-/* ------------------------------------------------------------- */
-/* config                                                        */
-/* ------------------------------------------------------------- */
-export const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000/api',   // <- ONE “/api”, not two
-  withCredentials: true,                  // <- send HttpOnly refresh cookie
+/* ------------------------------------------------------------------ */
+/* basic instance                                                     */
+/* ------------------------------------------------------------------ */
+const axiosInstance = axios.create({
+  baseURL:
+    import.meta.env.VITE_API_URL || 'http://localhost:5000/api', // dev fallback
+  withCredentials: true,                          // send refresh cookie
   headers: { 'Content-Type': 'application/json' }
 });
 
-/* ------------------------------------------------------------- */
-/* helpers                                                       */
-/* ------------------------------------------------------------- */
-const getToken = () => localStorage.getItem('lmsAccess');      // or 'lmsAuth'
-const setToken = (tok) => tok
-  ? localStorage.setItem('lmsAccess', tok)
-  : localStorage.removeItem('lmsAccess');
+/* ------------------------------------------------------------------ */
+/* tiny local helpers                                                 */
+/* ------------------------------------------------------------------ */
+const getToken = () => localStorage.getItem('lmsAccess');
 
-/* ------------------------------------------------------------- */
-/* request interceptor                                           */
-/* ------------------------------------------------------------- */
-axiosInstance.interceptors.request.use((config) => {
+const setToken = (tok) => {
+  if (tok) {
+    localStorage.setItem('lmsAccess', tok);
+    axiosInstance.defaults.headers.common.Authorization = `Bearer ${tok}`;
+  } else {
+    localStorage.removeItem('lmsAccess');
+    delete axiosInstance.defaults.headers.common.Authorization;
+  }
+};
+
+/* ------------------------------------------------------------------ */
+/* request-interceptor – attach token                                 */
+/* ------------------------------------------------------------------ */
+axiosInstance.interceptors.request.use((cfg) => {
   const tok = getToken();
-  if (tok) config.headers.Authorization = `Bearer ${tok}`;
-  return config;
+  if (tok) cfg.headers.Authorization = `Bearer ${tok}`;
+  return cfg;
 });
 
-/* ------------------------------------------------------------- */
-/* response interceptor with single-flight refresh logic         */
-/* ------------------------------------------------------------- */
-let isRefreshing   = false;
-let queuedRequests = [];          // callers waiting for new token
+/* ------------------------------------------------------------------ */
+/* response-interceptor – single-flight refresh                       */
+/* ------------------------------------------------------------------ */
+let isRefreshing = false;
+let queuedRequests = [];
 
-const queue = (cb) => queuedRequests.push(cb);
+const queue    = (cb)            => queuedRequests.push(cb);
 const runQueue = (err, newTok) => {
   queuedRequests.forEach((cb) => cb(err, newTok));
   queuedRequests = [];
 };
 
 axiosInstance.interceptors.response.use(
-  (res) => res,                                   // happy path
+  (res) => res,                                        // happy path
   async (err) => {
     const { config, response } = err;
 
-    // Only react to 401s that are NOT from /auth/refresh (or login/register)
     const shouldRefresh =
       response?.status === 401 &&
       !config._retry &&
       !config.url.includes(API_PATHS.AUTH.REFRESH) &&
-      !config.url.includes(API_PATHS.AUTH.LOGIN) &&
+      !config.url.includes(API_PATHS.AUTH.LOGIN)   &&
       !config.url.includes(API_PATHS.AUTH.REGISTER);
 
     if (!shouldRefresh) return Promise.reject(err);
     config._retry = true;
 
-    // ---------- a refresh is already in flight ----------
+    /* another request is already refreshing ------------------------ */
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
-        queue((e, tok) => {
+        queue((e, newTok) => {
           if (e) return reject(e);
-          config.headers.Authorization = `Bearer ${tok}`;
+          config.headers.Authorization = `Bearer ${newTok}`;
           resolve(axiosInstance(config));
         });
       });
     }
 
-    // ---------- we are the first to notice the 401 ----------
+    /* we are the first to notice the 401 --------------------------- */
     isRefreshing = true;
     try {
-      const { data } = await axiosInstance.get(API_PATHS.AUTH.REFRESH);  // uses cookie
-      const newTok = data.accessToken;
-      setToken(newTok);
-      runQueue(null, newTok);
+      const { data }  = await axiosInstance.get(API_PATHS.AUTH.REFRESH);
+      const newTok    = data.accessToken;
 
-      // replay the original request
+      setToken(newTok);               // persist + header default
+      runQueue(null, newTok);         // wake waiting calls
+
       config.headers.Authorization = `Bearer ${newTok}`;
-      return axiosInstance(config);
+      return axiosInstance(config);   // replay original
     } catch (refreshErr) {
-      setToken(null);                       // dump the bad access token
+      /* ---- refresh failed: hard logout + UX feedback ------------ */
+      setToken(null);
       runQueue(refreshErr, null);
+
+      toast.error('Session expired. Please log in again.');
+      window.location.replace('/login');   // immediate redirect
+
       return Promise.reject(refreshErr);
     } finally {
       isRefreshing = false;
     }
   }
 );
+
+/* ------------------------------------------------------------------ */
+/* exports                                                            */
+/* ------------------------------------------------------------------ */
+axiosInstance.setToken = setToken;
+axiosInstance.getToken = getToken;
 
 export default axiosInstance;
