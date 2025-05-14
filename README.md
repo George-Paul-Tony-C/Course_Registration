@@ -1,14 +1,14 @@
 # 📘 Course_Registration
-## A full-stack Course Registration (LMS-style) system with distinct roles for Admin, Faculty, and Student. Built using React for the frontend and Node.js + Express for the backend.
+### A full-stack Course Registration (LMS-style) system with distinct roles for Admin, Faculty, and Student. Built using React for the frontend and Node.js + Express for the backend.
 
-# 🚀 Tech Stack
-## Frontend: React, Tailwind CSS, Axios, React Router
+## 🚀 Tech Stack
+### Frontend: React, Tailwind CSS, Axios, React Router
 
-## Backend: Node.js, Express, JWT, bcrypt, MySQL
+### Backend: Node.js, Express, JWT, bcrypt, MySQL
 
-## Database: MySQL
+### Database: MySQL
 
-## Authentication: JWT-based authentication with role-based access control
+### Authentication: JWT-based authentication with role-based access control
 
 ## 🔐 Default Credentials
 ### 🛠 Admin
