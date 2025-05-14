@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Info } from 'lucide-react';
-import DashboardLayout from '../../components/Layouts/dashboardLayout';
+import DashboardLayout from '../../components/Layouts/admin/dashboardLayout';
 import axiosInstance from '../../utils/axiosInstance';
 import { API_PATHS } from '../../utils/api_paths';
 
@@ -10,6 +10,7 @@ import FacultyTab from '../../components/CourseManagement/FacultyTab';
 import StudentTab from '../../components/CourseManagement/StudentTab';
 import NotificationBanner from '../../components/CourseManagement/NotificationBanner';
 import EmptyState from '../../components/CourseManagement/EmptyState';
+import BackButton from '../../components/BackButton';
 
 export default function CourseManagement() {
   /* -------------------- data -------------------- */
@@ -126,6 +127,7 @@ export default function CourseManagement() {
   return (
     <DashboardLayout>
       <div className="container mx-auto p-2">
+      <BackButton />  
         <h1 className="mb-6 text-2xl font-bold">Course Management</h1>
 
         <NotificationBanner notification={notice} error={error} onClose={()=>setNotice(null)} onClearError={()=>setError(null)}/>

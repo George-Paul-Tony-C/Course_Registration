@@ -18,7 +18,8 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import DashboardLayout from '../../components/Layouts/dashboardLayout';
+import DashboardLayout from '../../components/Layouts/admin/dashboardLayout';
+import BackButton from '../../components/BackButton';
 
 /* utility functions */
 const prettify = s => s.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -43,6 +44,7 @@ export default function AdminProfilePage() {
         setInfo(data);
       } catch (e) {
         showToast('Failed to load profile', 'error');
+        console.log(e);
       } finally {
         setLoading(false);
       }
@@ -83,6 +85,7 @@ export default function AdminProfilePage() {
       {toast.show && <Toast {...toast} />}
 
       <div className="max-w-7xl mx-auto p-1">
+      <BackButton />  
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Admin Profile</h1>
           <p className="text-gray-500 mt-2">Manage your account information and security settings</p>

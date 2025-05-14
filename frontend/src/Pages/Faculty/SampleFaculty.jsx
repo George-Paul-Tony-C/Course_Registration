@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react';
 import { BookOpen, Users, FileText, CheckSquare, Video, FileUp, Home, LogOut, Mail, Settings, Bell, X, Edit, Trash, Play, Eye } from 'lucide-react';
 import { AuthCtx } from '../../context/AuthContext';
 
-export default function FacultyDashboard() {
+export default function SampleFacultyDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -277,7 +277,7 @@ export default function FacultyDashboard() {
                           <h4 className="text-sm font-medium">John Smith</h4>
                           <span className="ml-2 text-xs text-gray-500">Today, 10:30 AM</span>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">Question about the latest assignment deadline...</p>
+                        <p className="text-sm text-gray-600 mt-1">Question about the latest assignment deade...</p>
                       </div>
                     </div>
                   </div>

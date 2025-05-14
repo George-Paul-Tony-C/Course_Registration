@@ -3,8 +3,9 @@ import AuthProvider, { AuthCtx } from './context/AuthContext';
 import RoleRoute    from './context/RoleRoute';
 import LoginPage    from './Pages/Auth/LoginPage';
 import SignUpPage   from './Pages/Auth/SignUpPage';
-import FacultyDashboard from './Pages/Faculty/SampleFaculty';
-import StudentDashboard from './Pages/Student/SampleStudent';
+import SampleAdminDashboard from './Pages/Admin/SampleAdmin';
+import SampleFacultyDashboard from './Pages/Faculty/SampleFaculty';
+import SampleStudentDashboard from './Pages/Student/SampleStudent';
 import AdminProfilePage from './Pages/Admin/AdminProfilePage';
 import StudentListingPage from './Pages/Admin/StudentListingPage';
 import FacultyListingPage from './Pages/Admin/FacultyListingPage';
@@ -12,7 +13,6 @@ import { useContext } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CourseListingPage from './Pages/Admin/CourseListingPage';
-import SampleAdminDashboard from './Pages/Admin/SampleAdmin';
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import AddStudentPage from './Pages/Admin/AddStudentPage';
 import AddFacultyPage from './Pages/Admin/AddFacultyPage';
@@ -21,7 +21,12 @@ import PendingCoursesPage from './Pages/Admin/PendingCoursesPage';
 import ArchivedCoursesPage from './Pages/Admin/ArchivedCoursesPage';
 import ActiveCoursesPage from './Pages/Admin/ActiveCoursesPage';
 import CourseManagement from './Pages/Admin/CourseManagement';
-import StudentAssignment from './Pages/Admin/StudentAssignment';
+import FacultyDashboard from './Pages/Faculty/FacultyDashboard';
+import FacultyProfilePage from './Pages/Faculty/FacultyProfilePage';
+import StudentProfilePage from './Pages/Student/StudentProfilePage';
+import StudentDashboard from './Pages/Student/StudentDashboard';
+import FacultyCourseListingPage from './Pages/Faculty/FacultyCourseListingPage';
+import FacultyCourseDetailsPage from './Pages/Faculty/FacultyCourseDetailsPage';
 
 
 const Root = () => {
@@ -47,7 +52,7 @@ export default function App() {
             <Route path="/admin/profile" element={<AdminProfilePage />} />
 
             <Route path="/admin/students" element={<StudentListingPage />} />
-            <Route path="/admin/student/new" element={<AddStudentPage />} />
+            <Route path="/admin/students/new" element={<AddStudentPage />} />
 
             <Route path="/admin/faculties" element={<FacultyListingPage />} />
             <Route path="/admin/faculty/new" element={<AddFacultyPage />} />
@@ -59,16 +64,21 @@ export default function App() {
             <Route path="/admin/courses/inactive" element={<ArchivedCoursesPage />} />
 
             <Route path="/admin/managing" element={<CourseManagement />} />
-            <Route path="/admin/managing/student" element={<StudentAssignment />} />
 
           </Route>
 
           <Route element={<RoleRoute allow={['FACULTY']} />}>
+            {/* <Route path="/faculty" element={<SampleFacultyDashboard />} /> */}
             <Route path="/faculty" element={<FacultyDashboard />} />
+            <Route path="/faculty/profile" element={<FacultyProfilePage />} />
+            <Route path="/faculty/courses" element={<FacultyCourseListingPage />} />
+            <Route path="/faculty/courses/:courseId" element={<FacultyCourseDetailsPage />} />
           </Route>
 
           <Route element={<RoleRoute allow={['STUDENT']} />}>
-            <Route path="/student" element={<StudentDashboard />} />
+            <Route path="/student" element={<SampleStudentDashboard />} />
+            <Route path="/student/dashboard" element={<StudentDashboard />} />
+            <Route path="/student/profile" element={<StudentProfilePage />} />
           </Route>
 
           <Route path="*" element={<LoginPage />} />

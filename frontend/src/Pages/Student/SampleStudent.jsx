@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Bell, Book, Calendar, CheckCircle, FileText, Home, LogOut, Play, User } from 'lucide-react';
 import { AuthCtx } from '../../context/AuthContext';
 
-const StudentDashboard = () => {
+const SampleStudentDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [courses, setCourses] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -969,4 +969,4 @@ const StudentDashboard = () => {
   );
 };
 
-export default StudentDashboard;
+export default SampleStudentDashboard;

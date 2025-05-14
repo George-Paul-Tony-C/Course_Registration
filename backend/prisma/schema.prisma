@@ -9,49 +9,61 @@ generator client {
 }
 
 // ----------  ENUMS  ----------
-enum Role         { 
-  ADMIN 
-  FACULTY 
-  STUDENT 
+enum Role {
+  ADMIN
+  FACULTY
+  STUDENT
 }
-enum CourseStatus { 
+
+enum CourseStatus {
   PENDING
-  ACTIVE 
-  ARCHIVED 
+  ACTIVE
+  ARCHIVED
 }
-enum ContentType  { 
-  IMAGE 
-  PDF 
-  VIDEO 
-  QUIZ 
+
+enum ContentType {
+  IMAGE
+  PDF
+  VIDEO
+  PPTX
+  QUIZ    
+  OTHER
+}
+
+
+enum TodoPriority {
+  LOW
+  MEDIUM
+  HIGH
 }
 
 // ----------  MODELS  ----------
 
 model User {
-  id            Int      @id @default(autoincrement()) @db.UnsignedInt
-  username      String   @unique @db.VarChar(100)
-  email         String   @unique @db.VarChar(320)
-  password_hash String   @db.Char(60)
-  role          Role     @default(STUDENT)
-  is_deleted    Boolean  @default(false)
-  created_at    DateTime @default(now())
-  updated_at    DateTime? @updatedAt
+  id             Int             @id @default(autoincrement()) @db.UnsignedInt
+  username       String          @unique @db.VarChar(100)
+  email          String          @unique @db.VarChar(320)
+  password_hash  String          @db.Char(60)
+  role           Role            @default(STUDENT)
+  is_deleted     Boolean         @default(false)
+  created_at     DateTime        @default(now())
+  updated_at     DateTime?       @updatedAt
 
   createdCourses Course[]        @relation("CourseCreator")
-  facultyCourses CourseFaculty[]
-  studentCourses   CourseStudent[] @relation("StudentCourses")
-  adviseeCourses   CourseStudent[] @relation("FacultyAdvisees")
-  uploadedFiles  File[]
-  notifications  Notification[]
+  facultyCourses CourseFaculty[] 
+  studentCourses CourseStudent[] @relation("StudentCourses")
+  adviseeCourses CourseStudent[] @relation("FacultyAdvisees")
+  uploadedFiles  File[] 
+  notifications  Notification[] 
   auditLogs      AuditLog[]      @relation("AuditActor")
-  quizAttempts   QuizAttempt[]
-  refreshTokens  RefreshToken[]
+  quizAttempts   QuizAttempt[] 
+  refreshTokens  RefreshToken[] 
 
   @@index([role], map: "idx_users_role")
+  Module         Module[] 
+  TodoList TodoList[]
 }
 
-/// ---------------------------------------------------------------------
 model RefreshToken {
   id        Int      @id @default(autoincrement()) @db.UnsignedInt
   tokenHash String   @unique @db.Char(64)
@@ -65,21 +77,21 @@ model RefreshToken {
 }
 
 model Course {
-  id          Int      @id @default(autoincrement()) @db.UnsignedInt
-  code        String   @unique @db.VarChar(20)
-  title       String   @db.VarChar(150)
-  description String?  @db.Text
-  status      CourseStatus @default(PENDING)
-  created_by  Int      @db.UnsignedInt
-  is_deleted  Boolean  @default(false)
-  created_at  DateTime @default(now())
-  updated_at  DateTime? @updatedAt
+  id          Int              @id @default(autoincrement()) @db.UnsignedInt
+  code        String           @unique @db.VarChar(20)
+  title       String           @db.VarChar(150)
+  description String?          @db.Text
+  status      CourseStatus     @default(PENDING)
+  created_by  Int              @db.UnsignedInt
+  is_deleted  Boolean          @default(false)
+  created_at  DateTime         @default(now())
+  updated_at  DateTime?        @updatedAt
 
-  creator   User            @relation("CourseCreator", fields: [created_by], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  faculties CourseFaculty[]
-  students  CourseStudent[]
-  contents  Content[]
-  quizzes   Quiz[]
+  creator     User             @relation("CourseCreator", fields: [created_by], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  faculties   CourseFaculty[]  
+  students    CourseStudent[]  
+  modules     Module[] 
+  quizzes     Quiz[]
 
   @@index([status], map: "idx_courses_status")
 }
@@ -88,7 +100,7 @@ model CourseFaculty {
   course_id  Int @db.UnsignedInt
   faculty_id Int @db.UnsignedInt
 
-  course  Course @relation(fields: [course_id],  references: [id], onDelete: Cascade, onUpdate: Cascade)
+  course  Course @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   faculty User   @relation(fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@id([course_id, faculty_id])
@@ -98,11 +110,10 @@ model CourseFaculty {
 model CourseStudent {
   course_id   Int      @db.UnsignedInt
   student_id  Int      @db.UnsignedInt
-  faculty_id  Int?     @db.UnsignedInt   // optional
+  faculty_id  Int?     @db.UnsignedInt
   enrolled_at DateTime @default(now())
 
   course   Course @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
   student  User   @relation("StudentCourses", fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   faculty  User?  @relation("FacultyAdvisees", fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
@@ -111,34 +122,52 @@ model CourseStudent {
   @@index([faculty_id], map: "idx_cs_faculty")
 }
 
-
 model File {
   id            Int      @id @default(autoincrement()) @db.UnsignedInt
   uploader_id   Int?     @db.UnsignedInt
   original_name String   @db.VarChar(255)
   stored_path   String   @db.VarChar(500)
-  mime_type     String   @db.VarChar(100)
+  mime_type     String   @db.VarChar(100) // Store the MIME type (e.g., application/pdf, image/png)
   size_bytes    Int      @db.UnsignedInt
   uploaded_at   DateTime @default(now())
 
   uploader User?   @relation(fields: [uploader_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  contents Content[]
+  contents Content[] 
+
+  @@index([uploader_id], map: "idx_file_uploader_id")
+}
+
+model Module {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  title       String   @db.VarChar(150)
+  course_id   Int      @db.UnsignedInt
+  faculty_id  Int      @db.UnsignedInt
+  created_at  DateTime @default(now())
+  updated_at  DateTime? @updatedAt
+
+  course      Course   @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  faculty     User     @relation(fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  contents    Content[]
+
+  @@index([course_id], map: "idx_modules_course")
+  @@index([faculty_id], map: "idx_modules_faculty")
 }
 
 model Content {
   id            Int       @id @default(autoincrement()) @db.UnsignedInt
-  course_id     Int       @db.UnsignedInt
+  module_id     Int       @db.UnsignedInt
   title         String    @db.VarChar(150)
   type          ContentType
   file_id       Int?      @db.UnsignedInt
+  quiz_id       Int?      @db.UnsignedInt  
   youtube_url   String?   @db.VarChar(500)
   display_order Int       @default(0)
   created_at    DateTime  @default(now())
 
-  course Course @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  file   File?  @relation(fields: [file_id],   references: [id], onDelete: SetNull,  onUpdate: Cascade)
+  module Module @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  file   File?  @relation(fields: [file_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  quiz   Quiz?  @relation(fields: [quiz_id],   references: [id], onDelete: SetNull, onUpdate: Cascade)
 
-  @@index([course_id, display_order], map: "idx_contents_course")
 }
 
 model Quiz {
@@ -147,12 +176,16 @@ model Quiz {
   title       String   @db.VarChar(150)
   total_marks Int      @default(0)
   created_at  DateTime @default(now())
+  updated_at  DateTime? @updatedAt
+  due_date    DateTime?
+  
 
   course    Course         @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  questions QuizQuestion[]
+  questions QuizQuestion[] 
   attempts  QuizAttempt[]
 
   @@index([course_id], map: "idx_quizzes_course")
+  Content Content[]
 }
 
 model QuizQuestion {
@@ -175,7 +208,7 @@ model QuizAttempt {
   score        Int
   attempted_at DateTime @default(now())
 
-  quiz    Quiz @relation(fields: [quiz_id],    references: [id], onDelete: Cascade, onUpdate: Cascade)
+  quiz    Quiz @relation(fields: [quiz_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   student User @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@index([quiz_id, student_id], map: "idx_qa_quiz_student")
@@ -203,4 +236,21 @@ model AuditLog {
   actor User? @relation("AuditActor", fields: [actor_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([actor_id], map: "idx_audit_actor")
+}
+
+
+model TodoList {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  user_id     Int      @db.UnsignedInt
+  title       String   @db.VarChar(150)
+  description String?  @db.Text
+  is_completed Boolean  @default(false)
+  due_date    DateTime?
+  priority    TodoPriority @default(LOW)
+  created_at  DateTime @default(now())
+  updated_at  DateTime? @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([user_id], map: "idx_todo_user")
 }

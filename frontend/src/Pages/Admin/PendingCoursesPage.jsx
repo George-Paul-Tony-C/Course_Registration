@@ -4,7 +4,8 @@ import { format } from 'date-fns';
 
 import axiosInstance from '../../utils/axiosInstance';
 import { API_PATHS } from '../../utils/api_paths';
-import DashboardLayout from '../../components/Layouts/dashboardLayout';
+import DashboardLayout from '../../components/Layouts/admin/dashboardLayout';
+import BackButton from '../../components/BackButton';
 
 const PendingCoursesPage = () => {
   const [courses, setCourses] = useState([]);
@@ -70,6 +71,7 @@ const PendingCoursesPage = () => {
   return (
     <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
+      <BackButton />  
         <h1 className="text-2xl font-bold mb-6">Pending Course Approvals</h1>
         
         {loading ? (

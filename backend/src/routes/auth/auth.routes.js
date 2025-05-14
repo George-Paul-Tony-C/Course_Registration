@@ -4,7 +4,7 @@ const { verifyToken } = require('../../middlewares/auth');
 
 r.post('/register', ctr.register);
 r.post('/login',    ctr.login);
-r.get ('/refresh',  ctr.refresh);   // ← returns new access token using cookie
+r.get ('/refresh',  ctr.refresh);   
 r.post('/logout',   ctr.logout);
 r.get('/me', verifyToken, ctr.me);    
 r.put ('/password', verifyToken, ctr.changePassword);

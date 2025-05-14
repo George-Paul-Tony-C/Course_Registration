@@ -21,6 +21,19 @@ async function list(req, res, next) {
   } catch (err) { next(err); }
 }
 
+/* ------------ list his courses ----------------------------------------- */
+
+async function listMyCourses(req, res, next) {
+  try {
+    const studentId = Number(req.params.id);
+    const rows = await prisma.courseStudent.findMany({
+      where: { student_id: studentId },
+      include: { course: true }
+    });
+    res.json(rows);
+  } catch (err) { next(err); }
+}
+
 /* ------------ enrol many (optionally under a faculty) -------------- */
 async function enroll(req, res, next) {
   try {
@@ -73,4 +86,4 @@ async function remove(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { list, enroll, move, remove };
+module.exports = { list, enroll, move, remove , listMyCourses};

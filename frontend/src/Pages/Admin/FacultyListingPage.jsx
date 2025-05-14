@@ -19,7 +19,7 @@ import {
 
 import axiosInstance from '../../utils/axiosInstance';
 import { API_PATHS } from '../../utils/api_paths';
-import DashboardLayout from '../../components/Layouts/dashboardLayout';
+import DashboardLayout from '../../components/Layouts/admin/dashboardLayout';
 
 const FacultyListingPage = () => {
   const navigate = useNavigate();

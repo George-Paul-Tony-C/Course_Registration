@@ -39,6 +39,7 @@ r.delete('/courses/:id/faculty/:fid',    F.remove);
 
 /* ───── students ↔ course ------------------------------------------- */
 r.get   ('/courses/:id/students',        S.list);
+r.get   ('/courses/students/:id',         S.listMyCourses);
 r.post  ('/courses/:id/students',        S.enroll);
 r.patch ('/courses/:id/students/:sid',    S.move);     
 r.delete('/courses/:id/students/:sid',   S.remove);
@@ -46,8 +47,17 @@ r.delete('/courses/:id/students/:sid',   S.remove);
 // quizzes
 r.get('/quizzes', Q.list);
 
-// metrics & settings
-r.get ('/metrics',   M.dashboard);
+// metrics 
+
+r.get('/dashboard/stats',            M.getDashboardStats);
+r.get('/dashboard/recent-activities',M.getRecentActivities);
+r.get('/dashboard/trending-courses', M.getTrendingCourses);
+r.get('/dashboard/enrollment-trend', M.getEnrollmentTrend);   // NEW
+r.get('/dashboard/quiz-performance', M.getQuizPerformance); 
+
+
+//  settings
+
 r.get ('/settings',  SET.list);
 r.patch('/settings', SET.update);
 
